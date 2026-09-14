@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣小吃卡包圖鑑：40道經典好味</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        @keyframes packOpen {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .card-anim { animation: packOpen 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="bg-amber-50/90 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-5">
+
+    <!-- 主容器 -->
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-amber-200 overflow-hidden flex flex-col min-h-[760px]">
+        
+        <!-- 頂部資訊列 -->
+        <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 p-4 text-white flex flex-wrap justify-between items-center gap-3">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wide">📦 台灣小吃卡包圖鑑</h1>
+                <p class="text-xs text-amber-100">每包 5 張・挑戰湊齊全台 40 道經典好味道！</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right bg-white/20 backdrop-blur px-3 py-1.5 rounded-xl border border-white/30">
+                    <span class="text-[11px] block text-amber-100">剩餘卡包</span>
+                    <span id="pack-count" class="text-lg font-black text-white">2</span> 🎁
+                </div>
+                <div class="text-right bg-white/20 backdrop-blur px-3 py-1.5 rounded-xl border border-white/30">
+                    <span class="text-[11px] block text-amber-100">圖鑑進度</span>
+                    <span id="progress-text" class="text-sm font-black text-white">0 / 40</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷功能列 -->
+        <div class="bg-amber-100/70 px-4 py-2 border-b border-amber-200 flex justify-between items-center text-xs">
+            <span class="text-amber-800 font-medium">每日登入或開卡包收集美味軌跡！</span>
+            <button onclick="claimFreePacks()" id="daily-btn" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow-sm cursor-pointer">
+                每日領取 +2 卡包 🎁
+            </button>
+        </div>
+
+        <!-- 導覽頁籤 -->
+        <div class="grid grid-cols-2 bg-amber-50 border-b border-amber-200 text-center text-xs font-bold">
+            <button onclick="switchTab('pack')" id="tab-pack" class="py-3.5 text-amber-700 border-b-2 border-amber-600 transition">🃏 開啟卡包 (5張入)</button>
+            <button onclick="switchTab('collection')" id="tab-collection" class="py-3.5 text-slate-500 hover:text-slate-800 transition">📖 40道全圖鑑</button>
+        </div>
+
+        <!-- 內容區 -->
+        <div class="p-4 sm:p-6 flex-1 flex flex-col justify-between">
+
+            <!-- 頁籤一：開卡包畫面 -->
+            <div id="section-pack" class="space-y-6 flex flex-col items-center justify-center my-auto">
+                <div id="pack-visual" class="text-center space-y-3">
+                    <div class="inline-block p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl border-4 border-amber-200 cursor-pointer hover:scale-105 transition" onclick="openCardPack()">
+                        <div class="text-6xl mb-2">🥢</div>
+                        <div class="text-white font-black text-base tracking-widest">台灣小吃經典包</div>
+                        <div class="text-amber-100 text-xs mt-1">內含 5 張隨機小吃卡片</div>
+                    </div>
+                    <p class="text-xs text-slate-500">點擊上方卡包，或按下方按鈕撕開卡包！</p>
+                </div>
+
+                <!-- 5張卡片開包展示區 -->
+                <div id="card-reveal-area" class="hidden w-full space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-amber-700">✨ 本次開包結果（5張）</h3>
+                        <button onclick="openCardPack()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow cursor-pointer">
+                            再開一包 🎁
+                        </button>
+                    </div>
+                    <div id="opened-cards-grid" class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                        <!-- JS 動態生成 5 張卡片 -->
+                    </div>
+                </div>
+
+                <button id="open-pack-btn" onclick="openCardPack()" class="w-full max-w-sm bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-500/25 cursor-pointer">
+                    撕開一包美食卡包 (消耗 1 🎁)
+                </button>
+            </div>
+
+            <!-- 頁籤二：40道全圖鑑 -->
+            <div id="section-collection" class="hidden flex-col h-full space-y-3">
+                <div class="flex justify-between items-center text-xs text-slate-500">
+                    <span>點擊已解鎖卡片可查看詳細介紹</span>
+                    <button onclick="resetGameData()" class="text-red-500 hover:underline">重置進度</button>
+                </div>
+                <div id="encyclopedia-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    <!-- JS 動態生成 40 格圖鑑 -->
+                </div>
+            </div>
+
+            <!-- 提示訊息 -->
+            <div id="toast" class="hidden mt-3 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl text-center shadow-lg transition"></div>
+
+        </div>
+    </div>
+
+    <script>
+        const allSnacks = [
+            // SSR (頂級經典 5道)
+            { id: 1, name: "珍珠奶茶", emoji: "🧋", region: "全台・台北發祥", rarity: "SSR", desc: "Q彈黑糖珍珠配上濃醇奶香，揚名國際的台灣之光！" },
+            { id: 2, name: "紅燒牛肉麵", emoji: "🍜", region: "台北・全台經典", rarity: "SSR", desc: "慢火熬燉的濃郁紅燒湯頭，配上半筋半肉與酸菜。" },
+            { id: 3, name: "鼎泰豐小籠包", emoji: "🥟", region: "台北永康街", rarity: "SSR", desc: "黃金十八摺皮薄餡多，一口咬下湯汁鮮美四溢。" },
+            { id: 4, name: "辦桌佛跳牆", emoji: "🏺", region: "台灣喜宴・手路菜", rarity: "SSR", desc: "芋頭、排骨酥、鵪鶉蛋與香菇精燉的豪華辦桌魂。" },
+            { id: 5, name: "臺南虱目魚肚粥", emoji: "🍲", region: "台南府城", rarity: "SSR", desc: "鮮美無刺虱目魚肚搭配熬煮到化的米湯與蒜頭酥。" },
+
+            // SR (人氣名物 12道)
+            { id: 6, name: "台南肉燥飯", emoji: "🍚", region: "台南府城", rarity: "SR", desc: "肥而不膩的手切肉燥，膠質滿滿的庶民靈魂美食。" },
+            { id: 7, name: "士林超大雞排", emoji: "🍗", region: "全台夜市", rarity: "SR", desc: "外皮酥脆卡滋、撒上椒鹽與辣粉的宵夜之王。" },
+            { id: 8, name: "蚵仔麵線", emoji: "🥣", region: "萬華・全台小吃", rarity: "SR", desc: "柴魚勾芡羹湯配上鮮甜裹粉蚵仔與滷大腸。" },
+            { id: 9, name: "台式鹹酥雞", emoji: "🧄", region: "全台街角宵夜", rarity: "SR", desc: "炸得金黃酥脆的鹹酥雞，搭配九層塔與蒜片才是王道。" },
+            { id: 10, name: "大腸包小腸", emoji: "🌭", region: "逢甲夜市", rarity: "SR", desc: "糯米腸夾著炭烤台式香腸，配上一瓣生大蒜才是真內行。" },
+            { id: 11, name: "刈包（虎咬豬）", emoji: "🥙", region: "傳統小吃", rarity: "SR", desc: "軟綿割包夾入滷五花肉、酸菜、香菜與花生粉。" },
+            { id: 12, name: "三杯雞", emoji: "🥘", region: "台灣熱炒經典", rarity: "SR", desc: "麻油、米酒、醬油加上九層塔與薑片大火收汁。" },
+            { id: 13, name: "黑芝麻湯圓", emoji: "🍡", region: "冬至・元宵", rarity: "SR", desc: "一口咬下熱騰騰的黑芝麻餡噴湧而出，暖胃又暖心。" },
+            { id: 14, name: "嘉義火雞肉飯", emoji: "🍛", region: "嘉義噴水池", rarity: "SR", desc: "手撕火雞肉絲淋上香濃雞油與油蔥酥。" },
+            { id: 15, name: "宜蘭西魯肉", emoji: "🥘", region: "蘭陽手路菜", rarity: "SR", desc: "大白菜、蛋酥與肉絲勾芡的經典宜蘭辦桌羹。" },
+            { id: 16, name: "苗栗客家小炒", emoji: "🥢", region: "客家莊", rarity: "SR", desc: "魷魚、五花肉與豆干大火爆炒，鹹香惹味。" },
+            { id: 17, name: "屏東萬巒豬腳", emoji: "🍖", region: "屏東萬巒", rarity: "SR", desc: "滷得透亮的 Q 彈豬腳，沾上蒜蓉醬油膏。" },
+
+            // R (特色小吃 11道)
+            { id: 18, name: "古早味蚵仔煎", emoji: "🦪", region: "鹿港・夜市經典", rarity: "R", desc: "煎得恰恰的太白粉漿、鮮甜蚵仔加上特調甜辣醬。" },
+            { id: 19, name: "藥燉排骨", emoji: "🍲", region: "饒河夜市", rarity: "R", desc: "十全大補中藥材慢燉排骨，冬天進補第一首選。" },
+            { id: 20, name: "豬血糕加花生粉", emoji: "🍢", region: "夜市經典", rarity: "R", desc: "蒸透的豬血糕裹滿香菜與粗粒花生粉。" },
+            { id: 21, name: "筒仔米糕", emoji: "🍚", region: "台中・清水", rarity: "R", desc: "筒模蒸熟的糯米飯，淋上肉燥並放上滷蛋。" },
+            { id: 22, name: "蔥抓餅加蛋", emoji: "🥠", region: "台北公館・夜市", rarity: "R", desc: "外皮層層酥脆、內裡Q軟的現煎蔥抓餅。" },
+            { id: 23, name: "台南棺材板", emoji: "🍞", region: "台南安平", rarity: "R", desc: "厚片吐司酥炸挖空，填入香濃奶香海鮮巧達濃湯。" },
+            { id: 24, name: "基隆天婦羅", emoji: "🍢", region: "基隆廟口", rarity: "R", desc: "現炸魚漿甜不辣搭配小黃瓜片與甜辣醬。" },
+            { id: 25, name: "彰化阿璋肉圓", emoji: "🥟", region: "彰化市", rarity: "R", desc: "低溫油泡的Q彈外皮，包入筍干肉塊與香菇。" },
+            { id: 26, name: "彰化貓鼠麵", emoji: "🍜", region: "彰化老字號", rarity: "R", desc: "以大骨、扁魚與蛤蜊熬製的清甜高湯麵。" },
+            { id: 27, name: "苗栗薑絲大腸", emoji: "🥘", region: "客家經典", rarity: "R", desc: "酸 V 酸 V 的酸菜白醋醬汁炒肥美大腸。" },
+            { id: 28, name: "宜蘭卜肉", emoji: "🍤", region: "宜蘭三星", rarity: "R", desc: "裹上特調酥炸粉現炸的香酥里肌肉條。" },
+
+            // N (庶民日常 12道)
+            { id: 29, name: "傳統粉漿蛋餅", emoji: "🍳", region: "台式早餐店", rarity: "N", desc: "厚實軟Q的粉漿餅皮，淋上古早味蒜蓉油膏。" },
+            { id: 30, name: "香煎蘿蔔糕", emoji: "🥮", region: "早餐・台式港點", rarity: "N", desc: "煎到兩面金黃赤赤，外酥內軟配顆荷包蛋。" },
+            { id: 31, name: "台南古早味豆花", emoji: "🍮", region: "台南・全台甜品", rarity: "N", desc: "口感綿密滑嫩的傳統豆花，淋上糖水與花生仁。" },
+            { id: 32, name: "古早味冬瓜檸檬", emoji: "🥤", region: "台南・清涼飲品", rarity: "N", desc: "熬煮冬瓜磚加上鮮榨檸檬汁，酸甜解膩。" },
+            { id: 33, name: "雙胞胎與白糖粿", emoji: "🍩", region: "台南古早味點心", rarity: "N", desc: "現炸熱騰騰糯米粿，裹上白糖與花生粉。" },
+            { id: 34, name: "瓜仔肉飯", emoji: "🍱", region: "家常古早味", rarity: "N", desc: "醬瓜與豬絞肉拌炒入味，鹹香下飯的古早味。" },
+            { id: 35, name: "燒餅油條加冰豆漿", emoji: "☕", region: "眷村早餐經典", rarity: "N", desc: "酥脆燒餅夾現炸油條，配上一碗冰豆漿。" },
+            { id: 36, name: "新竹炒米粉與貢丸湯", emoji: "🍜", region: "新竹名物", rarity: "N", desc: "Q彈炊粉拌入肉燥與高麗菜，配彈牙貢丸湯。" },
+            { id: 37, name: "麻油雞湯", emoji: "🍲", region: "冬令進補", rarity: "N", desc: "老薑黑麻油煸炒土雞腿肉，加入米酒慢火燉煮。" },
+            { id: 38, name: "阿里山愛玉冰", emoji: "🍋", region: "阿里山特產", rarity: "N", desc: "天然手洗愛玉子，加上檸檬蜜水消暑聖品。" },
+            { id: 39, name: "宜蘭蔥油餅", emoji: "🥠", region: "礁溪名物", rarity: "N", desc: "滿滿三星蔥加上半熟蛋煎到金黃酥脆。" },
+            { id: 40, name: "花蓮扁食", emoji: "🥟", region: "花蓮市", rarity: "N", desc: "皮薄肉鮮的傳統大扁食，湯頭清甜順口。" }
+        ];
+
+        let gameState = {
+            packs: 2,
+            collected: {}, // { snackId: count }
+            lastClaimDate: null
+        };
+
+        function loadGame() {
+            const saved = localStorage.getItem('taiwan_card_packs_save');
+            if (saved) {
+                try { gameState = JSON.parse(saved); } catch(e) {}
+            }
+            updateUI();
+        }
+
+        function saveGame() {
+            localStorage.setItem('taiwan_card_packs_save', JSON.stringify(gameState));
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('pack-count').textContent = gameState.packs;
+            const collectedCount = Object.keys(gameState.collected).length;
+            document.getElementById('progress-text').textContent = `${collectedCount} / ${allSnacks.length}`;
+            renderEncyclopedia();
+        }
+
+        function switchTab(tab) {
+            const isPack = tab === 'pack';
+            document.getElementById('section-pack').classList.toggle('hidden', !isPack);
+            document.getElementById('section-collection').classList.toggle('hidden', isPack);
+            document.getElementById('section-collection').classList.toggle('flex', !isPack);
+            
+            document.getElementById('tab-pack').className = isPack 
+                ? "py-3.5 text-amber-700 border-b-2 border-amber-600 transition" 
+                : "py-3.5 text-slate-500 hover:text-slate-800 transition";
+            document.getElementById('tab-collection').className = !isPack 
+                ? "py-3.5 text-amber-700 border-b-2 border-amber-600 transition" 
+                : "py-3.5 text-slate-500 hover:text-slate-800 transition";
+        }
+
+        function claimFreePacks() {
+            const today = new Date().toDateString();
+            if (gameState.lastClaimDate === today) {
+                showToast("今天已經領過卡包囉！明天請再來～");
+                return;
+            }
+            gameState.lastClaimDate = today;
+            gameState.packs += 2;
+            saveGame();
+            showToast("成功領取 +2 卡包！");
+        }
+
+        // 隨機抽 5 張卡片（帶有簡單機率權重）
+        function drawOneSnack() {
+            const rand = Math.random();
+            let pool = [];
+            if (rand < 0.08) {
+                pool = allSnacks.filter(s => s.rarity === 'SSR');
+            } else if (rand < 0.28) {
+                pool = allSnacks.filter(s => s.rarity === 'SR');
+            } else if (rand < 0.58) {
+                pool = allSnacks.filter(s => s.rarity === 'R');
+            } else {
+                pool = allSnacks.filter(s => s.rarity === 'N');
+            }
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function openCardPack() {
+            if (gameState.packs < 1) {
+                showToast("卡包不足！請點擊「每日領取」或明日再來。");
+                return;
+            }
+            gameState.packs -= 1;
+
+            const pulled = [];
+            for (let i = 0; i < 5; i++) {
+                const snack = drawOneSnack();
+                pulled.push(snack);
+                gameState.collected[snack.id] = (gameState.collected[snack.id] || 0) + 1;
+            }
+            saveGame();
+
+            // 顯示 5 張開卡結果
+            const grid = document.getElementById('opened-cards-grid');
+            grid.innerHTML = pulled.map(snack => `
+                <div class="card-anim bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-3 flex flex-col justify-between text-center shadow-md">
+                    <div>
+                        <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
+                            snack.rarity === 'SSR' ? 'bg-amber-500 text-white' :
+                            snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
+                            snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-600 text-white'
+                        }">${snack.rarity}</span>
+                        <div class="text-3xl my-1">${snack.emoji}</div>
+                        <h4 class="font-black text-xs text-slate-800">${snack.name}</h4>
+                        <p class="text-[10px] text-amber-700 font-bold mt-0.5">📍 ${snack.region}</p>
+                    </div>
+                    <p class="text-[10px] text-slate-600 mt-2 bg-white/80 p-1.5 rounded-lg border border-amber-200/50 leading-snug">
+                        ${snack.desc}
+                    </p>
+                </div>
+            `).join('');
+
+            document.getElementById('card-reveal-area').classList.remove('hidden');
+            showToast("成功撕開一包卡包，獲得 5 張台灣小吃卡！");
+        }
+
+        function renderEncyclopedia() {
+            const grid = document.getElementById('encyclopedia-grid');
+            grid.innerHTML = allSnacks.map(snack => {
+                const count = gameState.collected[snack.id] || 0;
+                const isUnlocked = count > 0;
+                return `
+                    <div class="border rounded-xl p-2.5 flex flex-col justify-between text-xs ${
+                        isUnlocked 
+                            ? 'bg-amber-50/70 border-amber-300' 
+                            : 'bg-slate-100 border-slate-200 text-slate-400'
+                    }">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xl">${isUnlocked ? snack.emoji : '❓'}</span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                    snack.rarity === 'SSR' ? 'bg-amber-500 text-white' :
+                                    snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
+                                    snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-500 text-white'
+                                }">${snack.rarity}</span>
+                            </div>
+                        </div>
+                        <div class="mt-1.5">
+                            <div class="flex justify-between items-center">
+                                <p class="font-bold text-slate-800 text-[11px]">${isUnlocked ? snack.name : '未解鎖小吃'}</p>
+                                ${count > 1 ? `<span class="text-[9px] bg-amber-600 text-white px-1.5 rounded-full font-bold">x${count}</span>` : ''}
+                            </div>
+                            <p class="text-[9px] text-slate-500 mt-0.5 truncate">${isUnlocked ? snack.region : '???卡包解鎖'}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetGameData() {
+            if (confirm("確定要重置所有卡包與收集進度嗎？")) {
+                localStorage.removeItem('taiwan_card_packs_save');
+                gameState = { packs: 2, collected: {}, lastDailyDate: null };
+                document.getElementById('card-reveal-area').classList.add('hidden');
+                updateUI();
+                showToast("進度已重置！");
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        loadGame();
+    </script>
+</body>
+</html>
