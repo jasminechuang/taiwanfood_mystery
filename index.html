@@ -3,101 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台灣小吃卡包圖鑑：40道經典好味</title>
+    <title>台灣小吃卡包 TCG Pocket</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; }
-        @keyframes packOpen {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #0f172a; }
+
+        /* 卡包質感漸層與光澤 */
+        .booster-pack {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 40%, #78350f 100%);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .card-anim { animation: packOpen 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .booster-pack:hover {
+            transform: scale(1.02);
+            box-shadow: 0 25px 50px rgba(245,158,11,0.35), inset 0 2px 6px rgba(255,255,255,0.6);
+        }
+
+        /* 撕卡包上下裂開動畫 */
+        @keyframes tearTop {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-120px) rotate(-8deg); opacity: 0; }
+        }
+        @keyframes tearBottom {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(120px) rotate(8deg); opacity: 0; }
+        }
+        .anim-tear-top { animation: tearTop 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .anim-tear-bottom { animation: tearBottom 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+        /* 卡片彈出動畫 */
+        @keyframes cardPop {
+            0% { transform: scale(0.5) translateY(40px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .anim-card-pop { animation: cardPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* SSR 金色炫光邊框 */
+        .ssr-card {
+            border: 2px solid #fbbf24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+        }
+        .sr-card {
+            border: 2px solid #a855f7;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+        }
     </style>
 </head>
-<body class="bg-amber-50/90 text-slate-800 min-h-screen flex flex-col items-center p-3 sm:p-5">
+<body class="text-slate-100 min-h-screen flex flex-col items-center p-3 sm:p-5">
 
     <!-- 主容器 -->
-    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-amber-200 overflow-hidden flex flex-col min-h-[760px]">
+    <div class="w-full max-w-2xl bg-slate-900 rounded-3xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col min-h-[780px]">
         
         <!-- 頂部資訊列 -->
-        <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 p-4 text-white flex flex-wrap justify-between items-center gap-3">
+        <div class="bg-gradient-to-r from-amber-700 via-orange-600 to-amber-800 p-4 text-white flex flex-wrap justify-between items-center gap-3 border-b border-amber-600/40">
             <div>
-                <h1 class="text-xl sm:text-2xl font-black tracking-wide">📦 台灣小吃卡包圖鑑</h1>
-                <p class="text-xs text-amber-100">每包 5 張・挑戰湊齊全台 40 道經典好味道！</p>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wider flex items-center gap-2">
+                    <span>🎴</span> 台灣小吃 TCG Pocket
+                </h1>
+                <p class="text-xs text-amber-200">撕開卡包・收集 40 道台灣經典好滋味</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right bg-white/20 backdrop-blur px-3 py-1.5 rounded-xl border border-white/30">
-                    <span class="text-[11px] block text-amber-100">剩餘卡包</span>
-                    <span id="pack-count" class="text-lg font-black text-white">2</span> 🎁
+            <div class="flex items-center gap-2.5">
+                <div class="text-right bg-black/30 backdrop-blur px-3 py-1.5 rounded-xl border border-white/20">
+                    <span class="text-[10px] block text-amber-300">剩餘卡包</span>
+                    <span id="pack-count" class="text-lg font-black text-white">3</span> 🎁
                 </div>
-                <div class="text-right bg-white/20 backdrop-blur px-3 py-1.5 rounded-xl border border-white/30">
-                    <span class="text-[11px] block text-amber-100">圖鑑進度</span>
-                    <span id="progress-text" class="text-sm font-black text-white">0 / 40</span>
+                <div class="text-right bg-black/30 backdrop-blur px-3 py-1.5 rounded-xl border border-white/20">
+                    <span class="text-[10px] block text-amber-300">圖鑑解鎖</span>
+                    <span id="progress-text" class="text-sm font-black text-amber-400">0 / 40</span>
                 </div>
             </div>
         </div>
 
-        <!-- 快捷功能列 -->
-        <div class="bg-amber-100/70 px-4 py-2 border-b border-amber-200 flex justify-between items-center text-xs">
-            <span class="text-amber-800 font-medium">每日登入或開卡包收集美味軌跡！</span>
-            <button onclick="claimFreePacks()" id="daily-btn" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow-sm cursor-pointer">
-                每日領取 +2 卡包 🎁
+        <!-- 每日領取列 -->
+        <div class="bg-slate-800/90 px-4 py-2 border-b border-slate-700 flex justify-between items-center text-xs">
+            <span class="text-slate-300">每天登入可免費領取卡包！</span>
+            <button onclick="claimFreePacks()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow cursor-pointer">
+                每日免費 +2 卡包 🎁
             </button>
         </div>
 
-        <!-- 導覽頁籤 -->
-        <div class="grid grid-cols-2 bg-amber-50 border-b border-amber-200 text-center text-xs font-bold">
-            <button onclick="switchTab('pack')" id="tab-pack" class="py-3.5 text-amber-700 border-b-2 border-amber-600 transition">🃏 開啟卡包 (5張入)</button>
-            <button onclick="switchTab('collection')" id="tab-collection" class="py-3.5 text-slate-500 hover:text-slate-800 transition">📖 40道全圖鑑</button>
+        <!-- 頁籤切換 -->
+        <div class="grid grid-cols-2 bg-slate-950 border-b border-slate-800 text-center text-xs font-bold">
+            <button onclick="switchTab('pack')" id="tab-pack" class="py-3.5 text-amber-400 border-b-2 border-amber-400 transition">🃏 撕卡包體驗</button>
+            <button onclick="switchTab('collection')" id="tab-collection" class="py-3.5 text-slate-400 hover:text-slate-200 transition">📖 40道全圖鑑</button>
         </div>
 
         <!-- 內容區 -->
         <div class="p-4 sm:p-6 flex-1 flex flex-col justify-between">
 
-            <!-- 頁籤一：開卡包畫面 -->
-            <div id="section-pack" class="space-y-6 flex flex-col items-center justify-center my-auto">
-                <div id="pack-visual" class="text-center space-y-3">
-                    <div class="inline-block p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl border-4 border-amber-200 cursor-pointer hover:scale-105 transition" onclick="openCardPack()">
-                        <div class="text-6xl mb-2">🥢</div>
-                        <div class="text-white font-black text-base tracking-widest">台灣小吃經典包</div>
-                        <div class="text-amber-100 text-xs mt-1">內含 5 張隨機小吃卡片</div>
+            <!-- 頁籤一：撕卡包區域 -->
+            <div id="section-pack" class="flex-1 flex flex-col items-center justify-center space-y-6">
+                
+                <!-- 尚未撕開的卡包展示 -->
+                <div id="pack-container" class="w-64 h-96 booster-pack rounded-2xl flex flex-col justify-between p-6 cursor-pointer select-none" onclick="tearPackAnimation()">
+                    <div class="flex justify-between items-center">
+                        <span class="bg-black/40 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-400/30">TAIWAN TCG</span>
+                        <span class="text-xs text-amber-200">5張入</span>
                     </div>
-                    <p class="text-xs text-slate-500">點擊上方卡包，或按下方按鈕撕開卡包！</p>
+
+                    <div class="text-center space-y-3">
+                        <div class="text-7xl drop-shadow-lg">🥡</div>
+                        <div class="text-white font-black text-lg tracking-widest drop-shadow">台灣小吃極品包</div>
+                        <div class="text-amber-200 text-xs">VOL. 01 ・ 全台經典巡禮</div>
+                    </div>
+
+                    <!-- 撕裂線指示 -->
+                    <div class="border-t-2 border-dashed border-amber-300/80 pt-3 text-center">
+                        <span class="text-xs bg-amber-500 text-slate-950 font-black px-3 py-1 rounded-full shadow animate-pulse">
+                            ⚡ 點擊此處撕開卡包！
+                        </span>
+                    </div>
                 </div>
 
-                <!-- 5張卡片開包展示區 -->
-                <div id="card-reveal-area" class="hidden w-full space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-sm font-bold text-amber-700">✨ 本次開包結果（5張）</h3>
-                        <button onclick="openCardPack()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow cursor-pointer">
-                            再開一包 🎁
+                <!-- 開包後的 5 張卡片展示舞台 -->
+                <div id="cards-stage" class="hidden w-full space-y-4">
+                    <div class="flex justify-between items-center px-1">
+                        <span class="text-xs font-bold text-amber-400">✨ 撕開完成！獲得以下 5 張小吃卡片：</span>
+                        <button onclick="resetPackStage()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow cursor-pointer">
+                            再撕一包 🎁
                         </button>
                     </div>
-                    <div id="opened-cards-grid" class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-                        <!-- JS 動態生成 5 張卡片 -->
+
+                    <div id="pulled-cards-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <!-- 動態生成 5 張卡 -->
                     </div>
                 </div>
 
-                <button id="open-pack-btn" onclick="openCardPack()" class="w-full max-w-sm bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-500/25 cursor-pointer">
-                    撕開一包美食卡包 (消耗 1 🎁)
+                <button id="tear-btn" onclick="tearPackAnimation()" class="w-full max-w-sm bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-600/30 cursor-pointer">
+                    撕開台灣小吃卡包 (消耗 1 🎁)
                 </button>
             </div>
 
-            <!-- 頁籤二：40道全圖鑑 -->
+            <!-- 頁籤二：40道全圖鑑庫 -->
             <div id="section-collection" class="hidden flex-col h-full space-y-3">
-                <div class="flex justify-between items-center text-xs text-slate-500">
-                    <span>點擊已解鎖卡片可查看詳細介紹</span>
-                    <button onclick="resetGameData()" class="text-red-500 hover:underline">重置進度</button>
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span>點擊卡片可放大檢視詳細介紹</span>
+                    <button onclick="resetGameData()" class="text-red-400 hover:underline">重置所有圖鑑</button>
                 </div>
-                <div id="encyclopedia-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-[500px] overflow-y-auto pr-1">
-                    <!-- JS 動態生成 40 格圖鑑 -->
+                <div id="encyclopedia-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-[520px] overflow-y-auto pr-1">
+                    <!-- JS 生成 40 格 -->
                 </div>
             </div>
 
-            <!-- 提示訊息 -->
-            <div id="toast" class="hidden mt-3 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl text-center shadow-lg transition"></div>
+            <!-- 提示氣泡 -->
+            <div id="toast" class="hidden mt-3 bg-slate-800 border border-slate-700 text-amber-300 text-xs px-4 py-2.5 rounded-xl text-center shadow-lg transition"></div>
 
+        </div>
+    </div>
+
+    <!-- 卡片詳細彈窗 Modal -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border-2 border-amber-500/60 rounded-2xl max-w-xs w-full p-5 text-center space-y-3 shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-base">✕</button>
+            <div id="modal-rarity" class="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full"></div>
+            <div id="modal-emoji" class="text-6xl my-2"></div>
+            <h3 id="modal-name" class="text-lg font-black text-white"></h3>
+            <p id="modal-region" class="text-xs text-amber-400 font-bold"></p>
+            <p id="modal-desc" class="text-xs text-slate-300 bg-slate-800/80 p-3 rounded-xl border border-slate-700 leading-relaxed"></p>
+            <div id="modal-count" class="text-xs text-slate-400"></div>
         </div>
     </div>
 
@@ -153,13 +219,13 @@
         ];
 
         let gameState = {
-            packs: 2,
-            collected: {}, // { snackId: count }
+            packs: 3,
+            collected: {}, // { id: count }
             lastClaimDate: null
         };
 
         function loadGame() {
-            const saved = localStorage.getItem('taiwan_card_packs_save');
+            const saved = localStorage.getItem('taiwan_tcg_save');
             if (saved) {
                 try { gameState = JSON.parse(saved); } catch(e) {}
             }
@@ -167,7 +233,7 @@
         }
 
         function saveGame() {
-            localStorage.setItem('taiwan_card_packs_save', JSON.stringify(gameState));
+            localStorage.setItem('taiwan_tcg_save', JSON.stringify(gameState));
             updateUI();
         }
 
@@ -185,11 +251,11 @@
             document.getElementById('section-collection').classList.toggle('flex', !isPack);
             
             document.getElementById('tab-pack').className = isPack 
-                ? "py-3.5 text-amber-700 border-b-2 border-amber-600 transition" 
-                : "py-3.5 text-slate-500 hover:text-slate-800 transition";
+                ? "py-3.5 text-amber-400 border-b-2 border-amber-400 transition" 
+                : "py-3.5 text-slate-400 hover:text-slate-200 transition";
             document.getElementById('tab-collection').className = !isPack 
-                ? "py-3.5 text-amber-700 border-b-2 border-amber-600 transition" 
-                : "py-3.5 text-slate-500 hover:text-slate-800 transition";
+                ? "py-3.5 text-amber-400 border-b-2 border-amber-400 transition" 
+                : "py-3.5 text-slate-400 hover:text-slate-200 transition";
         }
 
         function claimFreePacks() {
@@ -204,7 +270,6 @@
             showToast("成功領取 +2 卡包！");
         }
 
-        // 隨機抽 5 張卡片（帶有簡單機率權重）
         function drawOneSnack() {
             const rand = Math.random();
             let pool = [];
@@ -220,43 +285,65 @@
             return pool[Math.floor(Math.random() * pool.length)];
         }
 
-        function openCardPack() {
+        function tearPackAnimation() {
             if (gameState.packs < 1) {
-                showToast("卡包不足！請點擊「每日領取」或明日再來。");
+                showToast("卡包不足！請點擊「每日免費 +2 卡包」。");
                 return;
             }
-            gameState.packs -= 1;
 
-            const pulled = [];
-            for (let i = 0; i < 5; i++) {
-                const snack = drawOneSnack();
-                pulled.push(snack);
-                gameState.collected[snack.id] = (gameState.collected[snack.id] || 0) + 1;
-            }
-            saveGame();
+            const packContainer = document.getElementById('pack-container');
+            const tearBtn = document.getElementById('tear-btn');
+            
+            // 模擬撕開動效
+            packContainer.style.transition = "transform 0.3s";
+            packContainer.style.transform = "scale(0.95)";
+            
+            setTimeout(() => {
+                gameState.packs -= 1;
+                const pulled = [];
+                for (let i = 0; i < 5; i++) {
+                    const snack = drawOneSnack();
+                    pulled.push(snack);
+                    gameState.collected[snack.id] = (gameState.collected[snack.id] || 0) + 1;
+                }
+                saveGame();
 
-            // 顯示 5 張開卡結果
-            const grid = document.getElementById('opened-cards-grid');
-            grid.innerHTML = pulled.map(snack => `
-                <div class="card-anim bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-3 flex flex-col justify-between text-center shadow-md">
-                    <div>
-                        <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                            snack.rarity === 'SSR' ? 'bg-amber-500 text-white' :
-                            snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
-                            snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-600 text-white'
-                        }">${snack.rarity}</span>
-                        <div class="text-3xl my-1">${snack.emoji}</div>
-                        <h4 class="font-black text-xs text-slate-800">${snack.name}</h4>
-                        <p class="text-[10px] text-amber-700 font-bold mt-0.5">📍 ${snack.region}</p>
+                packContainer.classList.add('hidden');
+                tearBtn.classList.add('hidden');
+
+                const stage = document.getElementById('cards-stage');
+                stage.classList.remove('hidden');
+
+                const grid = document.getElementById('pulled-cards-grid');
+                grid.innerHTML = pulled.map((snack, idx) => `
+                    <div onclick="showSnackDetail(${snack.id})" style="animation-delay: ${idx * 0.08}s" class="anim-card-pop cursor-pointer bg-slate-800 rounded-xl p-3 flex flex-col justify-between text-center transition hover:-translate-y-1 ${
+                        snack.rarity === 'SSR' ? 'ssr-card' : snack.rarity === 'SR' ? 'sr-card' : 'border border-slate-700'
+                    }">
+                        <div>
+                            <span class="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full mb-1.5 ${
+                                snack.rarity === 'SSR' ? 'bg-amber-500 text-slate-950' :
+                                snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
+                                snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-600 text-white'
+                            }">${snack.rarity}</span>
+                            <div class="text-3xl my-2">${snack.emoji}</div>
+                            <h4 class="font-bold text-xs text-white leading-snug">${snack.name}</h4>
+                            <p class="text-[9px] text-amber-400 mt-1">${snack.region}</p>
+                        </div>
+                        <div class="mt-3 text-[10px] text-slate-400 bg-slate-900/80 py-1 rounded">
+                            點擊查看
+                        </div>
                     </div>
-                    <p class="text-[10px] text-slate-600 mt-2 bg-white/80 p-1.5 rounded-lg border border-amber-200/50 leading-snug">
-                        ${snack.desc}
-                    </p>
-                </div>
-            `).join('');
+                `).join('');
 
-            document.getElementById('card-reveal-area').classList.remove('hidden');
-            showToast("成功撕開一包卡包，獲得 5 張台灣小吃卡！");
+                showToast("🎉 卡包撕開成功！獲得 5 張台灣小吃卡片！");
+            }, 300);
+        }
+
+        function resetPackStage() {
+            document.getElementById('pack-container').classList.remove('hidden');
+            document.getElementById('pack-container').style.transform = "scale(1)";
+            document.getElementById('cards-stage').classList.add('hidden');
+            document.getElementById('tear-btn').classList.remove('hidden');
         }
 
         function renderEncyclopedia() {
@@ -265,40 +352,64 @@
                 const count = gameState.collected[snack.id] || 0;
                 const isUnlocked = count > 0;
                 return `
-                    <div class="border rounded-xl p-2.5 flex flex-col justify-between text-xs ${
+                    <div onclick="showSnackDetail(${snack.id})" class="border rounded-xl p-2.5 flex flex-col justify-between text-xs cursor-pointer transition hover:scale-[1.02] ${
                         isUnlocked 
-                            ? 'bg-amber-50/70 border-amber-300' 
-                            : 'bg-slate-100 border-slate-200 text-slate-400'
+                            ? (snack.rarity === 'SSR' ? 'bg-amber-950/40 ssr-card' : snack.rarity === 'SR' ? 'bg-purple-950/40 sr-card' : 'bg-slate-800/80 border-slate-600')
+                            : 'bg-slate-950/60 border-slate-800 text-slate-600'
                     }">
                         <div class="flex justify-between items-start">
                             <span class="text-xl">${isUnlocked ? snack.emoji : '❓'}</span>
-                            <div class="flex items-center gap-1">
-                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                    snack.rarity === 'SSR' ? 'bg-amber-500 text-white' :
-                                    snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
-                                    snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-500 text-white'
-                                }">${snack.rarity}</span>
-                            </div>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                snack.rarity === 'SSR' ? 'bg-amber-500 text-slate-950' :
+                                snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
+                                snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+                            }">${snack.rarity}</span>
                         </div>
-                        <div class="mt-1.5">
+                        <div class="mt-2">
                             <div class="flex justify-between items-center">
-                                <p class="font-bold text-slate-800 text-[11px]">${isUnlocked ? snack.name : '未解鎖小吃'}</p>
-                                ${count > 1 ? `<span class="text-[9px] bg-amber-600 text-white px-1.5 rounded-full font-bold">x${count}</span>` : ''}
+                                <p class="font-bold text-white text-[11px] truncate">${isUnlocked ? snack.name : '未解鎖小吃'}</p>
+                                ${count > 1 ? `<span class="text-[9px] bg-amber-500 text-slate-950 px-1.5 rounded-full font-bold ml-1">x${count}</span>` : ''}
                             </div>
-                            <p class="text-[9px] text-slate-500 mt-0.5 truncate">${isUnlocked ? snack.region : '???卡包解鎖'}</p>
+                            <p class="text-[9px] text-slate-400 mt-0.5 truncate">${isUnlocked ? snack.region : '???卡包抽出'}</p>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        function showSnackDetail(id) {
+            const snack = allSnacks.find(s => s.id === id);
+            const count = gameState.collected[id] || 0;
+            const modal = document.getElementById('detail-modal');
+
+            const rarityEl = document.getElementById('modal-rarity');
+            rarityEl.textContent = `${snack.rarity} 級台灣美食卡`;
+            rarityEl.className = `inline-block text-xs font-bold px-3 py-1 rounded-full ${
+                snack.rarity === 'SSR' ? 'bg-amber-500 text-slate-950' :
+                snack.rarity === 'SR' ? 'bg-purple-600 text-white' :
+                snack.rarity === 'R' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'
+            }`;
+
+            document.getElementById('modal-emoji').textContent = count > 0 ? snack.emoji : '❓';
+            document.getElementById('modal-name').textContent = count > 0 ? snack.name : '尚未解鎖的神秘小吃';
+            document.getElementById('modal-region').textContent = count > 0 ? `📍 ${snack.region}` : '未知產地';
+            document.getElementById('modal-desc').textContent = count > 0 ? snack.desc : '請透過撕開台灣小吃卡包來解鎖這張卡片！';
+            document.getElementById('modal-count').textContent = count > 0 ? `圖鑑擁有張數：共 ${count} 張` : '圖鑑未收錄';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
         function resetGameData() {
-            if (confirm("確定要重置所有卡包與收集進度嗎？")) {
-                localStorage.removeItem('taiwan_card_packs_save');
-                gameState = { packs: 2, collected: {}, lastDailyDate: null };
-                document.getElementById('card-reveal-area').classList.add('hidden');
+            if (confirm("確定要重置所有卡包與圖鑑進度嗎？")) {
+                localStorage.removeItem('taiwan_tcg_save');
+                gameState = { packs: 3, collected: {}, lastDailyDate: null };
+                resetPackStage();
                 updateUI();
-                showToast("進度已重置！");
+                showToast("已重置所有圖鑑資料！");
             }
         }
 
@@ -306,7 +417,7 @@
             const toast = document.getElementById('toast');
             toast.textContent = msg;
             toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+            setTimeout(() => toast.classList.add('hidden'), 3500);
         }
 
         loadGame();
